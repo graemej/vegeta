@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/davecheney/profile"
 	"log"
 	"os"
 	"runtime"
@@ -23,14 +24,23 @@ Globals:
   -cpus=%d Number of CPUs to use
 `, runtime.NumCPU())
 
+var enableProfiler bool
+
 func init() {
 	flag.Usage = func() { fmt.Print(usage) }
 	cpus := flag.Int("cpus", runtime.NumCPU(), "Number of CPUs to use")
+	flag.BoolVar(&enableProfiler, "profile", false, "Enable profiler")
 	flag.Parse()
 	runtime.GOMAXPROCS(*cpus)
 }
 
 func main() {
+	if enableProfiler {
+		defer profile.Start(profile.CPUProfile).Stop()
+		defer profile.Start(profile.MemProfile).Stop()
+		defer profile.Start(profile.BlockProfile).Stop()
+	}
+
 	commands := map[string]func([]string) command{
 		"attack": attackCmd,
 		"report": reportCmd,
